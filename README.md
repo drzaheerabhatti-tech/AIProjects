@@ -3,8 +3,8 @@
 ### 🔹 Agentic AI Systems
 Exploratory research into agent-based AI systems, focusing on multi-step reasoning, orchestration, and evaluation-driven development.
 
-📁 `langchain/`  
-➡️ See `langchain/README.md` for implementation details and experiments.
+📁 `agents/`  
+➡️ See `agents/README.md` for implementation details and experiments.
 
 ---
 
