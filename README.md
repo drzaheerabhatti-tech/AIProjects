@@ -1,9 +1,10 @@
-# AIProjects
-Experimental and research AI projects covering OpenAI APIs, RAG pipelines, vector search, and production-oriented LLM patterns.
+### 🔹 LangChain / Agent Research
+Research and experimentation with LangChain, LangGraph, and LangSmith, focused on building interpretable, multi-step agents and evaluation-driven workflows.
 
-## Projects
+Includes:
+- Agent orchestration using LangGraph
+- Evaluation pipelines with LangSmith
+- Applied cognitive-science-inspired agent design
 
-### 🔹 LangChain LLM Demo
-Explores LangChain with OpenAI models, prompt chaining, and early RAG patterns.
-
-📁 `langchain`
+📁 `langchain/`  
+➡️ See `langchain/README.md` for full project documentation.
