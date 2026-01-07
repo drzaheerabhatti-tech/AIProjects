@@ -1,10 +1,27 @@
+# AIProjects
+
+A research-oriented repository exploring applied AI system design using modern large language models (LLMs).  
+This repository is organized around **research areas**, with each area containing focused, hands-on experiments and demos.
+
+The goal is not to provide polished products, but to demonstrate understanding of **core concepts, trade-offs, and implementation patterns** in contemporary AI systems.
+
+---
+
 ## Research Areas
 
 ### 🔹 Agentic AI Systems
 Exploratory research into agent-based AI systems, focusing on multi-step reasoning, orchestration, and evaluation-driven development.
 
 📁 `agents/`  
-➡️ See `agents/README.md` for implementation details and experiments.
+➡️ See `agents/README.md` for detailed implementation notes and experiments.
+
+---
+
+### 🔹 Cohere Platform Experiments
+Hands-on exploration of Cohere’s LLM platform, starting from foundational usage and progressing toward applied patterns such as structured outputs, retrieval, and evaluation.
+
+📁 `cohere-demos/`  
+➡️ Includes step-by-step demos using the Cohere Chat API, along with notes on API evolution and response parsing.
 
 ---
 
@@ -19,3 +36,34 @@ Research into retrieval-based architectures for grounding large language models 
 Investigation of evaluation techniques, feedback loops, and observability patterns for LLM-based systems.
 
 *(Projects forthcoming)*
+
+---
+
+## Repository Philosophy
+
+- **Concept-first, tool-second**  
+  Folder structure reflects *what is being studied* (agents, RAG, evaluation), not just which library is used.
+
+- **Small, focused demos**  
+  Each example is intentionally scoped to highlight a specific capability or concept.
+
+- **Learning transparency**  
+  Where useful, friction encountered during development is documented to capture lessons learned and prevent repeat mistakes.
+
+- **Interview-ready**  
+  Code and documentation are written to support explanation and discussion, not just execution.
+
+---
+
+## Notes on Secrets and Configuration
+
+- API keys and secrets are **never committed**
+- `.env` files are gitignored
+- `.env.example` files are used where configuration needs to be documented
+
+---
+
+## Status
+
+This repository is actively evolving as new experiments are added and existing ones are refined.
+
