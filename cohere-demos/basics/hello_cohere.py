@@ -14,8 +14,7 @@ co = cohere.ClientV2(api_key=api_key)
 response = co.chat(
     model="command-a-03-2025",
     messages=[
-#       {"role":"user","content":"Explain what an API is in simple terms?"} 
-       {"role":"user","content":"List all years between 2000 and 2026, inclusive"} 
+       {"role":"user","content":"Explain what an API is in simple terms?"} 
     ],
     max_tokens=600,
 )
@@ -38,11 +37,11 @@ response = co.chat(
 
 #print(response.message.content)
 
-#print("".join(block.text for block in response.message.content if hasattr(block,"text")))
-block = response.message.content[0]
+print("".join(block.text for block in response.message.content if hasattr(block,"text")))
+#block = response.message.content[0]
 
-print(type(block))
-print(block.__class__)
-print(block.__class__.__name__)
-print(dir(block))
-print(block.dict())
+#print(type(block))
+#print(block.__class__)
+#print(block.__class__.__name__)
+#print(dir(block))
+#print(block.dict())
