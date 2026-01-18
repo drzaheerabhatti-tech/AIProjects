@@ -1,355 +1,385 @@
-# Cohere API Evaluation – Practical Learning & Performance Analysis
+# Cohere API Evaluation – Practical Learning & RAG Foundations
 
-This repository documents a **hands-on evaluation of Cohere’s AI APIs**, with a focus on **latency behavior, performance distributions, grounding, and real-world usage patterns** — not just producing correct answers.
+This repository documents a **hands-on evaluation of Cohere’s APIs**, with a focus on:
 
-The goal of this work was **learning and evaluation**, rather than building a production application.
+- understanding how different model families are used
+- measuring **latency distributions** (avg / p50 / p95)
+- observing **tail latency and variability**
+- assembling a minimal but realistic **RAG pipeline**
+
+The goal is **learning and evaluation**, not building a production system.
 
 ---
 
-## Models & Capabilities Evaluated
+## Models Covered
+
+This project evaluates the following Cohere model families:
 
 ### 1. Command (Command-R)
-Used for **text generation and reasoning**, such as explaining technical concepts.
+**Purpose:**  
+Text generation, reasoning, and explanation.
 
-Key focus:
-- end-to-end latency
-- tail behavior (p95, max)
-- refusal and grounding behavior when constrained by context
+**Used for:**  
+- answering questions
+- synthesizing responses
+- grounded generation in RAG
 
 ---
 
 ### 2. Embed
-Used for **semantic representation** of text.
+**Purpose:**  
+Convert text into vectors for semantic similarity.
 
-Capabilities evaluated:
+**Used for:**  
 - document embedding
 - query embedding
-- semantic similarity via cosine distance
-- latency distribution (avg / p50 / p95 / max)
-- impact of caching document embeddings
-
-This forms the **retrieval foundation** for RAG systems.
+- retrieval based on cosine similarity
 
 ---
 
 ### 3. Rerank
-Used to **re-score and reorder candidate documents** for a given query.
+**Purpose:**  
+Reorder candidate documents by relevance to a query.
 
-Capabilities evaluated:
-- ranking quality improvements over raw embedding similarity
-- latency characteristics under repeated runs
-
-Rerank was evaluated both standalone and as part of a RAG pipeline.
+**Used for:**  
+- improving retrieval quality after embedding
+- selecting the most relevant context for generation
 
 ---
 
 ### 4. Classify
-Used for **zero-shot text classification** via a command-based classifier.
+**Purpose:**  
+Assign labels to text using a command-based classification flow.
 
-Capabilities evaluated:
-- label assignment without task-specific training
-- latency distribution
-- cold-start vs steady-state behavior
-- tail latency effects
-
----
-
-### 5. RAG (Retrieval-Augmented Generation)
-A complete **Embed → Rerank → Command** pipeline was implemented and evaluated.
-
-Key properties:
-- document retrieval via embeddings
-- candidate refinement via reranking
-- grounded answer generation using retrieved context only
-- explicit refusal when context is insufficient
+**Used for:**  
+- text categorization experiments
+- latency comparison with other model families
 
 ---
 
-## Environment & Setup
+### 5. RAG (Combined Pipeline)
+**Purpose:**  
+Bring everything together into a grounded question-answering flow.
 
-- Python virtual environment
-- Cohere Python SDK (`ClientV2`)
-- API key supplied via environment variable (`COHERE_API_KEY`)
-- Modular evaluation scripts:
-  - `command_eval.py`
-  - `embed_eval.py`
-  - `rerank_eval.py`
-  - `classify_eval.py`
-  - `rag_eval.py`
-  - shared utilities in `common.py` and `data_ai.py`
-
-Scripts were intentionally kept **small, explicit, and readable** to support learning and inspection.
+**Pipeline:**
+1. Embed documents
+2. Embed query
+3. Retrieve top candidates
+4. Rerank candidates
+5. Generate an answer grounded in retrieved context
 
 ---
 
-## What the Evaluation Scripts Do
+## Repository Structure
 
-### Command Evaluation
-- Sends structured prompts to a versioned Command-R model
-- Measures end-to-end latency across repeated runs
-- Reports average, p50, p95, and max latency
-- Exposes long-tail behavior in generation models
+```text
+cohere-rag-evaluation/
+├── README.md
+├── list_models.py
+├── command_eval.py
+├── embed_eval.py
+├── rerank_eval.py
+├── classify_eval.py
+├── rag_eval.py
+├── common.py
+└── data_ai.py
+````
 
----
-
-### Embed Evaluation
-- Embeds a fixed set of documents
-- Embeds a query independently
-- Computes cosine similarity to rank documents
-- Separately measures:
-  - document embedding latency (cold start)
-  - query embedding latency (steady state)
-- Demonstrates the impact of **caching document embeddings**
+Each script evaluates **one model family** to keep responsibilities clear.
 
 ---
 
-### Rerank Evaluation
-- Takes a query and candidate documents
-- Produces relevance-scored rankings
-- Measures rerank latency distributions
-- Compares embedding-only retrieval vs reranked results
+## Evaluation Philosophy
+
+This project treats AI APIs as **distributed systems**, not black boxes.
+
+For every model call we observe:
+
+* variability between runs
+* long-tail latency
+* effects of caching
+* realistic infrastructure constraints (rate limits)
+
+**Key idea:**
+Correctness alone is not enough — **performance distributions matter**.
 
 ---
 
-### Classify Evaluation
-- Classifies multiple texts into predefined labels
-- Demonstrates zero-shot classification
-- Highlights cold-start effects and tail latency
-- Reinforces the need for percentile-based analysis
+## What Each Script Does
+
+### `command_eval.py`
+
+* Sends repeated chat requests to Command-R
+* Measures end-to-end latency
+* Reports avg / p50 / p95 / max
+* Demonstrates long-tail behavior in generation models
 
 ---
 
-### RAG Evaluation
-- Combines Embed → Rerank → Command
-- Enforces **strict grounding rules**
-- Explicitly tests:
-  - in-scope questions
-  - out-of-scope questions
-- Validates correct refusal behavior when context is insufficient
-- Measures latency per pipeline stage
+### `embed_eval.py`
+
+* Embeds a fixed document set (cached)
+* Embeds queries repeatedly
+* Computes cosine similarity
+* Measures latency separately for:
+
+  * document embedding (one-time)
+  * query embedding (steady-state)
+
+**Mental model:**
+*Read the book once; answer questions many times.*
+
+---
+
+### `rerank_eval.py`
+
+* Reranks a list of candidate documents for a query
+* Measures rerank latency distribution
+* Shows improved ordering compared to embedding alone
+
+---
+
+### `classify_eval.py`
+
+* Classifies short texts into predefined labels
+* Demonstrates command-based classification
+* Highlights latency variability across runs
+
+---
+
+### `rag_eval.py`
+
+Implements a minimal **RAG pipeline**:
+
+1. Embed documents (cached)
+2. Embed query
+3. Retrieve candidates
+4. Rerank candidates
+5. Generate a grounded answer
+
+Also includes **grounding tests**, where the model correctly refuses to answer when the context does not support the question.
 
 ---
 
 ## Key Learnings
 
-### 1. Model Versioning Matters
-- Older model names were deprecated
-- Explicit, versioned model identifiers provide stability
+### Latency Is Variable
 
-**Takeaway:** Always verify available models programmatically.
+Even identical prompts show variability due to:
 
----
-
-### 2. Latency Is Inherently Variable
-Even with identical inputs, latency varied due to:
-- shared inference infrastructure
-- queueing and scheduling
-- network variability
-
-**Takeaway:** Variability is normal — measure distributions, not single values.
+* shared inference infrastructure
+* queueing effects
+* internal scheduling
 
 ---
 
-### 3. Averages Are Misleading
-Rare slow requests significantly skewed averages.
+### Averages Are Misleading
 
-**Takeaway:** Averages hide real user experience.
-
----
-
-### 4. Percentiles Matter (p95 > Average)
-- p95 latency consistently reflected realistic worst-case behavior
-- Tail events were visible but bounded
-
-**Takeaway:** Percentiles are essential for system evaluation.
+A single slow request can skew averages dramatically.
 
 ---
 
-### 5. Long-Tail Behavior Is Real
-- Very slow responses occurred
-- Requests completed successfully
-- Systems recovered normally
+### p95 Reflects Real Experience
 
-**Takeaway:** Tail latency must be expected in distributed AI systems.
+p95 captures the **worst latency most users will experience**, making it far more useful than averages.
 
 ---
 
-### 6. Embeddings Are Fast and Stable
-Compared to generation:
-- lower latency
-- tighter distributions
-- smaller tails
+### Embeddings Are Fast and Stable
 
-Typical steady-state query embedding:
-- p50 ≈ 160 ms
-- p95 ≈ 170 ms
+* much lower latency than generation
+* tighter distributions
+* smaller tail effects
 
 ---
 
-### 7. Caching Fundamentally Changes the System
-Without caching:
-- documents re-embedded every query
-- higher latency and cost
+### Caching Changes the System
 
-With caching:
-- documents embedded once
-- clean separation of retrieval vs query cost
+Caching document embeddings:
 
-**Mental model:**  
-_Read the book once; answer questions many times._
+* reduces cost
+* improves latency
+* produces clearer performance signals
 
 ---
 
-### 8. Grounded RAG Prevents Hallucinations
-- The model correctly refused when answers were not supported by context
-- Out-of-scope questions were handled safely
+### Rate Limits Are Real
 
-**Takeaway:** Retrieval alone is not enough — grounding rules matter.
+Trial keys enforce request limits, shaping:
 
----
-
-### 9. Rate Limits Shape Design
-Using a trial API key exposed:
-- request-per-minute limits
-- the need for pacing, caching, and batching
-
-**Takeaway:** Infrastructure constraints influence system architecture, even in experiments.
+* pacing
+* batching
+* caching strategies
 
 ---
 
-## Summary
+## Python Virtual Environment Setup
 
-This evaluation demonstrated that working with modern AI systems requires understanding:
+Using a virtual environment ensures isolation and reproducibility.
 
-- latency distributions, not just outputs
-- tail behavior and cold starts
-- caching and retrieval strategies
-- grounding and refusal behavior
-- realistic infrastructure constraints
+### Create Environment
 
-The same principles apply to **small experiments and large production systems**.
+**Windows (PowerShell):**
 
----
+```powershell
+python -m venv .venv
+```
 
-## Next Steps
-- Evaluate retrieval quality metrics beyond latency
-- Add citation-style answers to RAG output
-- Explore batching and concurrency effects
-- Compare alternative embedding and rerank models
+**Linux / macOS:**
+
+```bash
+python3 -m venv .venv
+```
 
 ---
 
-## Appendix
+### Activate Environment
 
-### Obtaining a Cohere API Key
+**Windows (PowerShell):**
 
-To run the examples in this repository, you need a **Cohere API key**.
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
-1. Go to the Cohere dashboard:
-   https://dashboard.cohere.com/
+If blocked:
 
-2. Create a free account (or sign in).
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
 
-3. Navigate to:
-   **Dashboard → API Keys**
+**Linux / macOS:**
 
-4. Create a new API key.
-   - A **trial key** is sufficient for learning and evaluation.
-   - Trial keys have rate limits (e.g. requests per minute), which this project intentionally surfaces and measures.
+```bash
+source .venv/bin/activate
+```
 
-5. Copy the key and set it using one of the methods above (environment variable or `.env` file).
-
----
-
-### Notes on Trial Keys
-
-- Trial keys are rate-limited (e.g. ~40 requests/minute).
-- Rate limits influenced:
-  - pacing logic
-  - caching decisions
-  - latency distribution analysis
-- This was treated as a **realistic constraint**, not a limitation to hide.
-
-Production keys can be created later if higher throughput is required.
+You should see `(.venv)` in your prompt.
 
 ---
 
-## Appendix – API Key Management
+### Install Dependencies
 
-This project uses the **COHERE_API_KEY** environment variable.  
-API keys are **never hard-coded** in source files.
+```bash
+pip install cohere python-dotenv numpy
+```
 
 ---
 
-### Obtaining a Cohere API Key
+## API Key Management
 
-1. Go to the Cohere dashboard:  
-   https://dashboard.cohere.com/
-
-2. Create a free account (or sign in).
-
-3. Navigate to **Dashboard → API Keys**.
-
-4. Create a new API key.
-   - A **trial key** is sufficient for learning and evaluation.
-   - Trial keys are rate-limited (this project intentionally surfaces those limits).
-
-5. Copy the key and set it using one of the methods below.
+This project uses the `COHERE_API_KEY` environment variable.
+Keys are **never hard-coded**.
 
 ---
 
 ### Temporary (Current Session Only)
 
-Use this when experimenting or testing.
+**Windows (PowerShell):**
 
-#### Windows (PowerShell)
-```
+```powershell
 $env:COHERE_API_KEY="your_api_key_here"
 ```
 
-### Linux / macOS (bash, zsh)
-```
+**Linux / macOS:**
+
+```bash
 export COHERE_API_KEY="your_api_key_here"
 ```
+
+---
+
+### Persistent (Recommended)
+
+**Windows:**
+
+```powershell
+setx COHERE_API_KEY "your_api_key_here"
+```
+
+Restart your terminal afterward.
+
+**Linux / macOS:**
+Add to `~/.bashrc`, `~/.bash_profile`, or `~/.zshrc`:
+
+```bash
+export COHERE_API_KEY="your_api_key_here"
+```
+
+Reload:
+
+```bash
+source ~/.bashrc
+```
+
 ---
 
 ### Using a `.env` File (Local Development)
 
-For local development, API keys can be stored in a `.env` file instead of being set manually in the shell.
+Create `.env` in the project root:
 
-1. Create a file named `.env` in the project root:
-   ```env
-   COHERE_API_KEY=your_api_key_here
-   ```
-Add .env to .gitignore to prevent committing secrets:
-
-gitignore
-```
-.env
+```env
+COHERE_API_KEY=your_api_key_here
 ```
 
-2. Install the helper library:
+Ensure `.env` is in `.gitignore`.
 
-```
+Install helper:
+
+```bash
 pip install python-dotenv
 ```
 
-3. Load the variables in Python:
-Near the top of your Python script (before accessing os.environ):
+Load in Python:
 
-```
-import os
+```python
 from dotenv import load_dotenv
 load_dotenv()
 ```
 
-This reads the .env file and injects variables into the environment.
+Access key via:
 
-4. Access the API key in code
-Once loaded, the API key is available via:
-
-```
-api_key = os.environ["COHERE_API_KEY"]
+```python
+os.environ["COHERE_API_KEY"]
 ```
 
-This approach keeps credentials out of source control while supporting repeatable local runs.
+---
+
+## Getting an API Key
+
+1. Visit: [https://dashboard.cohere.com/api-keys](https://dashboard.cohere.com/api-keys)
+2. Create a free trial key
+3. Store it securely using one of the methods above
+
+---
+
+## Quick Start
+
+```bash
+python list_models.py
+python command_eval.py
+python embed_eval.py
+python rerank_eval.py
+python classify_eval.py
+python rag_eval.py
+```
+
+Observe:
+
+* latency variability
+* p95 vs average
+* effects of caching
+* grounded vs ungrounded answers
+
+---
+
+## Final Takeaway
+
+This project demonstrates **practical, measurable use of Cohere APIs**:
+
+* correct API usage
+* performance evaluation
+* distribution-based thinking
+* realistic RAG construction
+
+These are the same concerns that appear in **production AI systems**, explored here in a controlled, transparent way.
+
